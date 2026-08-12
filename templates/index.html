@@ -3,11 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First Website</title>
+    <title>AI Insurance Prediction System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Hello, {{ name }}!</h1>
-    <p>This is my very first website using Python and Flask.</p>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>🛡️ AI Insurance Prediction System</h1>
+            <p class="subtitle">Welcome, {{ name }}! Leverage machine learning to evaluate and predict insurance eligibility instantly.</p>
+        </header>
+
+        <!-- Main Dashboard Cards -->
+        <main class="dashboard-grid">
+            <div class="card">
+                <h2>📊 Dataset & Training</h2>
+                <p>Upload your custom datasets or train the machine learning model with the latest records.</p>
+                <a href="/upload" class="btn btn-primary">Go to Upload / Training</a>
+            </div>
+
+            <div class="card">
+                <h2>🤖 Make a Prediction</h2>
+                <p>Input client details to evaluate risk factors and predict approval status.</p>
+                <a href="/predict" class="btn btn-secondary">Run Prediction</a>
+            </div>
+        </main>
+    </div>
 </body>
 </html>

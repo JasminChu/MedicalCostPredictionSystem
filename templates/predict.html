@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🤖 Insurance Cost Prediction</h1>
+            <p class="subtitle">Enter all client details below for an accurate AI prediction.</p>
+        </header>
+
+        <form action="/predict" method="POST" class="upload-form">
+            <div style="width: 100%; max-width: 400px; text-align: left;">
+                <label for="age">Age:</label><br>
+                <input type="number" name="age" required style="width: 100%; padding: 8px; margin-bottom: 12px;"><br>
+
+                <label for="sex">Sex:</label><br>
+                <select name="sex" required style="width: 100%; padding: 8px; margin-bottom: 12px;">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select><br>
+
+                <label for="bmi">BMI:</label><br>
+                <input type="number" step="0.1" name="bmi" required style="width: 100%; padding: 8px; margin-bottom: 12px;"><br>
+
+                <label for="children">Number of Children:</label><br>
+                <input type="number" name="children" required style="width: 100%; padding: 8px; margin-bottom: 12px;"><br>
+
+                <label for="smoker">Smoker:</label><br>
+                <select name="smoker" required style="width: 100%; padding: 8px; margin-bottom: 12px;">
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select><br>
+
+                <label for="region">Region:</label><br>
+                <select name="region" required style="width: 100%; padding: 8px; margin-bottom: 20px;">
+                    <option value="northeast">Northeast</option>
+                    <option value="northwest">Northwest</option>
+                    <option value="southeast">Southeast</option>
+                    <option value="southwest">Southwest</option>
+                </select><br>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Predict Charges</button>
+        </form>
+
+        {% if prediction_result %}
+            <div style="margin-top: 20px; padding: 15px; background-color: #edf2f7; border-radius: 8px;">
+                <h3>Prediction Result:</h3>
+                <p style="font-size: 1.2rem; font-weight: bold; color: #2b6cb0;">{{ prediction_result }}</p>
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 20px;">
+            <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

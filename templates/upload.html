@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Dataset & Train Model</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Upload Dataset</h1>
+            <p class="subtitle">Select your Excel dataset file to train the AI Insurance Prediction model.</p>
+        </header>
+
+        <!-- Upload Form -->
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+            <div class="file-drop-area">
+                <input type="file" name="file" accept=".xlsx" required class="file-input">
+            </div>
+            <br>
+            <button type="submit" class="btn btn-primary">Upload and Train Model</button>
+        </form>
+
+        <div style="margin-top: 20px;">
+            <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

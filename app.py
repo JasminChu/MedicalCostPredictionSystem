@@ -1,67 +1,95 @@
+# Window OS
 # venv\Scripts\activate
 # flask run
 # http://127.0.0.1:5000
 
-from flask import Flask, render_template, request
-import joblib
+# Mac OS
+# source venv/bin/activate
+# flask run
+# http://127.0.0.1:8000/
+
+# Update on training model
+# Existing training data (https://www.kaggle.com/datasets/mirichoi0218/insurance)
+# python train_model.py
+
+
+import csv
+import os
 import pandas as pd
-from sklearn.metrics import confusion_matrix, classification_report
-
-# Load the trained model when the app starts
-decision_tree_model = joblib.load("model.pkl")
-
-# We need some data to evaluate the model
-df = pd.read_excel("loan_data.xlsx")
-X_test = df[['age', 'income']]
-y_test = df['loan_approved']
+import joblib
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-@app.route("/")
+# Load the trained XGBoost model if it exists
+MODEL_PATH = 'model.pkl'
+
+@app.route('/')
 def home():
-    my_name = "Coding partner"
-    return render_template("index.html", name=my_name)
+    return render_template('index.html', name="Coding partner")
 
-@app.route("/about")
-def about():
-    return render_template("about.html")
-
-@app.route("/greet", methods=["GET", "POST"])
-def greet_user():
-    if request.method == "POST":
-        user_name = request.form["name"]
-        return render_template("greeting.html", name=user_name)
-    return render_template("greet_form.html")
-
-@app.route("/predict", methods=["GET", "POST"])
-def make_prediction():
-    if request.method == "POST":
-        age = int(request.form["age"])
-        income = int(request.form["income"])
-
-        # Make individual prediction
-        y_pred_single = decision_tree_model.predict([[age, income]])
-        if y_pred_single[0] == 1:
-            result = "Loan Approved"
-        else:
-            result = "Loan Denied"
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return redirect(request.url)
         
-        # Generate evaluation metrics and output as a dictionary
-        y_pred_all = decision_tree_model.predict(X_test)
-        conf_matrix = confusion_matrix(y_test, y_pred_all)
-        class_report = classification_report(y_test, y_pred_all, output_dict=True)
+        file = request.files['file']
         
-        # --- NEW CODE: Extract accuracy as a separate variable ---
-        accuracy = (class_report['accuracy'])*100
-        # --- END OF NEW CODE ---
+        if file.filename == '':
+            return redirect(request.url)
         
-        return render_template("results.html", 
-                               result=result, 
-                               conf_matrix=conf_matrix, 
-                               class_report=class_report,
-                               accuracy=accuracy) # Pass the new variable
+        if file:
+            # Save and handle upload if needed
+            file.save("insurance_data.csv")
+            return redirect(url_for('home'))
+
+    return render_template('upload.html')
+
+@app.route('/predict', methods=['GET', 'POST'])
+def predict():
+    prediction_result = None
     
-    return render_template("prediction_form.html")
+    if request.method == 'POST':
+        if not os.path.exists('model.pkl') or not os.path.exists('model_columns.pkl'):
+            return "Model files not found! Please train the model first.", 400
+        
+        model = joblib.load('model.pkl')
+        model_columns = joblib.load('model_columns.pkl')
+        
+        # Get all input values from the form
+        age = float(request.form['age'])
+        sex = request.form['sex']
+        bmi = float(request.form['bmi'])
+        children = int(request.form['children'])
+        smoker = request.form['smoker']
+        region = request.form['region']
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        # 2. Save to CSV
+        user_data = [age, sex, bmi, children, smoker, region, 0] # 0 is a placeholder for 'charges'
+        with open('user_submissions.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            # Write header only if file is new
+            if os.path.getsize('user_submissions.csv') == 0:
+                writer.writerow(['age', 'sex', 'bmi', 'children', 'smoker', 'region', 'charges'])
+            writer.writerow(user_data)
+            
+        
+        # Create a DataFrame with the user input
+        input_data = pd.DataFrame([[age, sex, bmi, children, smoker, region]], 
+                                  columns=['age', 'sex', 'bmi', 'children', 'smoker', 'region'])
+        
+        # Apply one-hot encoding to match training data structure
+        input_encoded = pd.get_dummies(input_data, columns=['sex', 'smoker', 'region'])
+        
+        # Reindex to ensure all columns match the trained model (fill missing dummy columns with 0)
+        input_encoded = input_encoded.reindex(columns=model_columns, fill_value=0)
+        
+        # Run prediction
+        prediction = model.predict(input_encoded)[0]
+        prediction_result = f"Estimated Insurance Charges: ${prediction:,.2f}"
+        
+    return render_template('predict.html', prediction_result=prediction_result)
+
+if __name__ == '__main__':
+    app.run(port=8000, debug=True)
