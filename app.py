@@ -24,27 +24,38 @@ app = Flask(__name__)
 # Load the trained XGBoost model if it exists
 MODEL_PATH = 'model.pkl'
 
+# Configure an upload folder for uploaded CSV files
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 @app.route('/')
 def home():
     return render_template('index.html', name="Coding partner")
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
+    message = None
     if request.method == 'POST':
+        # Check if a file was sent in the request
         if 'file' not in request.files:
-            return redirect(request.url)
+            return "No file part in the request", 400
         
         file = request.files['file']
         
         if file.filename == '':
-            return redirect(request.url)
+            return "No selected file", 400
         
-        if file:
-            # Save and handle upload if needed
-            file.save("insurance_data.csv")
-            return redirect(url_for('home'))
-
-    return render_template('upload.html')
+        if file and file.filename.endswith('.csv'):
+            # Save the file securely to the uploads folder
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'user_submissions.csv')
+            file.save(file_path)
+            
+            message = "File successfully uploaded! You can now retrain your model."
+        else:
+            message = "Invalid file type. Please upload a .csv file."
+            
+    return render_template('upload.html', message=message)
 
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
