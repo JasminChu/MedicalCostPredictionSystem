@@ -1,1 +1,5 @@
 .DS_Store
+.venv/
+venv/
+user_submissions.csv
+uv.lock
