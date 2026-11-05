@@ -1,0 +1,7 @@
+# Ignore local caches, data directories, and git files
+.cache/
+uploads/
+.git/
+*.csv
+__pycache__/
+.pytest_cache/
