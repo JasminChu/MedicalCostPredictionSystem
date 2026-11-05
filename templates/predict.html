@@ -13,7 +13,7 @@
             <p class="subtitle">Enter all client details below for an accurate AI prediction.</p>
         </header>
 
-        <form action="/predict" method="POST" class="upload-form">
+        <form id="predict-form" action="/predict" method="POST" class="upload-form">
             <div style="width: 100%; max-width: 400px; text-align: left;">
                 <label for="age">Age:</label><br>
                 <input type="number" name="age" required style="width: 100%; padding: 8px; margin-bottom: 12px;"><br>
@@ -56,8 +56,69 @@
         {% endif %}
 
         <div style="margin-top: 20px;">
+            <button type="button" id="download-csv" class="btn btn-secondary">
+                Download my submissions (<span id="sub-count">0</span>)
+            </button>
+            <button type="button" id="clear-csv" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <div style="margin-top: 20px;">
             <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
         </div>
     </div>
+
+    <script>
+    // Submissions are kept in this browser (localStorage), so they survive page
+    // reloads and are never lost when the Vercel server instance restarts.
+    (function () {
+        var KEY = "user_submissions";
+        var FIELDS = ["age", "sex", "bmi", "children", "smoker", "region"];
+
+        function load() {
+            try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+            catch (e) { return []; }
+        }
+        function save(rows) {
+            try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch (e) {}
+        }
+        function refreshCount() {
+            document.getElementById("sub-count").textContent = load().length;
+        }
+
+        // Record the row just before the form is sent to the server.
+        document.getElementById("predict-form").addEventListener("submit", function (e) {
+            var data = new FormData(e.target);
+            var row = FIELDS.map(function (f) { return data.get(f); });
+            row.push(0); // charges placeholder, same as the server-side CSV
+            var rows = load();
+            rows.push(row);
+            save(rows);
+        });
+
+        document.getElementById("download-csv").addEventListener("click", function () {
+            var rows = load();
+            if (!rows.length) { alert("No submissions saved in this browser yet."); return; }
+            var csv = [FIELDS.concat("charges").join(",")]
+                .concat(rows.map(function (r) { return r.join(","); }))
+                .join("\n");
+            var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "user_submissions.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(a.href);
+        });
+
+        document.getElementById("clear-csv").addEventListener("click", function () {
+            if (confirm("Delete all saved submissions from this browser?")) {
+                save([]); refreshCount();
+            }
+        });
+
+        refreshCount();
+    })();
+    </script>
 </body>
 </html>
