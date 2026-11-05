@@ -1,7 +1,7 @@
-# Ignore local caches, data directories, and git files
+# Ignore local caches, git history, and data directories
+.git/
 .cache/
 uploads/
-.git/
 *.csv
 __pycache__/
 .pytest_cache/
