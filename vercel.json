@@ -3,9 +3,11 @@
   "buildCommand": "pip install -r requirements.txt",
 
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
+      { "source": "/(.*)", "destination": "/api/index" }
+    ],
+    "functions": {
+      "api/index.py": {
+        "includeFiles": "templates/**"
+      }
     }
-  ]
 }
