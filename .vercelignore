@@ -1,7 +1,5 @@
-# Exclude git history, local caches, and user uploads from the Vercel bundle
 .git/
 .cache/
 uploads/
-*.csv
 __pycache__/
-.pytest_cache/
+*.csv
