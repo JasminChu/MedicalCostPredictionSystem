@@ -1,11 +1,18 @@
 {
   "installCommand": "pip install -r requirements.txt",
   "buildCommand": "pip install -r requirements.txt",
-  
+
+    "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python"
+    }
+  ],
+
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "app.py"
+      "destination": "/app.py"
     }
   ]
 }
