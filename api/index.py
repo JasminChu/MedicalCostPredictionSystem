@@ -20,7 +20,8 @@ import pandas as pd
 import joblib
 from flask import Flask, render_template, request, redirect, url_for
 
-app = Flask(__name__)
+# Tell Flask explicitly where the templates folder is located relative to api/index.py
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
 # Load the trained XGBoost model if it exists
 MODEL_PATH = 'model.pkl'
