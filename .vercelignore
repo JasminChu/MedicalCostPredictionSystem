@@ -1,4 +1,4 @@
-# Ignore local caches, git history, and data directories
+# Exclude git history, local caches, and user uploads from the Vercel bundle
 .git/
 .cache/
 uploads/
