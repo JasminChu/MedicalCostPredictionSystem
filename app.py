@@ -1,6 +1,21 @@
 # Flask app for Vercel (zero-config): expose a top-level variable named `app`.
 # Local run:  flask run   (or: python app.py)
 
+# Window OS
+# venv\Scripts\activate
+# flask run
+# http://127.0.0.1:5000
+
+# Mac OS
+# source venv/bin/activate
+# flask run
+# http://127.0.0.1:8000/
+# uv run app.py  
+
+# Update on training model
+# Existing training data (https://www.kaggle.com/datasets/mirichoi0218/insurance)
+# python train_model.py
+
 import csv
 import os
 
