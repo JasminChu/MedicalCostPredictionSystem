@@ -7,6 +7,7 @@
 # source venv/bin/activate
 # flask run
 # http://127.0.0.1:8000/
+# uv run app.py  
 
 # Update on training model
 # Existing training data (https://www.kaggle.com/datasets/mirichoi0218/insurance)
@@ -25,7 +26,12 @@ app = Flask(__name__)
 MODEL_PATH = 'model.pkl'
 
 # Configure an upload folder for uploaded CSV files
-UPLOAD_FOLDER = 'uploads'
+# Use /tmp directory if running on a serverless platform like Vercel, otherwise use local folder
+if os.environ.get('VERCEL'):
+    UPLOAD_FOLDER = '/tmp/uploads'
+else:
+    UPLOAD_FOLDER = 'uploads'
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
