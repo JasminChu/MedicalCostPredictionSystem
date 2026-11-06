@@ -56,7 +56,7 @@ def get_model():
 
 @app.route("/")
 def home():
-    return render_template("index.html", name="Coding partner")
+    return render_template("index.html", name="to InsureAI")
 
 
 @app.route("/upload", methods=["GET", "POST"])
