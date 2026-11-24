@@ -52,6 +52,37 @@
             <div style="margin-top: 20px; padding: 15px; background-color: #edf2f7; border-radius: 8px;">
                 <h3>Prediction Result:</h3>
                 <p style="font-size: 1.2rem; font-weight: bold; color: #2b6cb0;">{{ prediction_result }}</p>
+
+                {% if shap_contributions %}
+                    <div style="margin-top: 16px; text-align: left;">
+                        <h4 style="margin-bottom: 8px;">Feature Contributions (SHAP)</h4>
+                        {% if base_value is not none %}
+                            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 10px;">
+                                Base model average: <strong>${{ "{:,.2f}".format(base_value) }}</strong>
+                            </p>
+                        {% endif %}
+                        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 6px; overflow: hidden;">
+                            <thead>
+                                <tr style="background-color: #e2e8f0; text-align: left;">
+                                    <th style="padding: 8px 12px;">Feature</th>
+                                    <th style="padding: 8px 12px;">Input Value</th>
+                                    <th style="padding: 8px 12px;">Contribution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in shap_contributions %}
+                                    <tr style="border-top: 1px solid #edf2f7;">
+                                        <td style="padding: 8px 12px;">{{ item.feature }}</td>
+                                        <td style="padding: 8px 12px;">{{ item.value }}</td>
+                                        <td style="padding: 8px 12px; font-weight: 600; color: {{ '#c53030' if item.impact > 0 else ('#2f855a' if item.impact < 0 else '#4a5568') }};">
+                                            {{ "+$" if item.impact > 0 else ("-$" if item.impact < 0 else "$") }}{{ "{:,.2f}".format(item.impact | abs) }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
         {% endif %}
 
