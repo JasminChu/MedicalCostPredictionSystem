@@ -22,7 +22,7 @@ import os
 import joblib
 import numpy as np
 import pandas as pd
-import shap
+import xgboost as xgb
 from flask import Flask, render_template, request
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,19 +43,17 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 SUBMISSIONS_CSV = os.path.join(UPLOAD_FOLDER, "user_submissions.csv")
 
-# Load the model and SHAP explainer once per cold start, not on every request.
+# Load the model once per cold start, not on every request.
 _model = None
 _model_columns = None
-_explainer = None
 
 
 def get_model():
-    global _model, _model_columns, _explainer
+    global _model, _model_columns
     if _model is None:
         _model = joblib.load(MODEL_PATH)
         _model_columns = joblib.load(COLUMNS_PATH)
-        _explainer = shap.TreeExplainer(_model)
-    return _model, _model_columns, _explainer
+    return _model, _model_columns
 
 
 def build_shap_contributions(model_columns, encoded_row, row_shap, raw_inputs):
@@ -159,7 +157,7 @@ def predict():
         if not (os.path.exists(MODEL_PATH) and os.path.exists(COLUMNS_PATH)):
             return "Model files not found! Please train the model first.", 400
 
-        model, model_columns, explainer = get_model()
+        model, model_columns = get_model()
 
         age = float(request.form["age"])
         sex = request.form["sex"]
@@ -189,11 +187,13 @@ def predict():
         predicted_charge = round(float(prediction), 2)
         prediction_result = f"Estimated Insurance Charges: ${predicted_charge:,.2f}"
 
-        # 2. Compute SHAP feature contributions for this prediction
-        raw_shap = explainer.shap_values(input_encoded)
-        row_shap = np.asarray(raw_shap[0], dtype=float)
-        expected = explainer.expected_value
-        base_value = round(float(np.asarray(expected).reshape(-1)[0]), 2)
+        # 2. Compute TreeSHAP feature contributions via XGBoost's native pred_contribs
+        booster = model.get_booster()
+        dmatrix = xgb.DMatrix(input_encoded, feature_names=list(input_encoded.columns))
+        contribs = np.asarray(booster.predict(dmatrix, pred_contribs=True)[0], dtype=float)
+
+        row_shap = contribs[:-1]
+        base_value = round(float(contribs[-1]), 2)
 
         shap_contributions = build_shap_contributions(
             model_columns,
