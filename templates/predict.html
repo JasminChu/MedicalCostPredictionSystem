@@ -89,7 +89,7 @@
         document.getElementById("predict-form").addEventListener("submit", function (e) {
             var data = new FormData(e.target);
             var row = FIELDS.map(function (f) { return data.get(f); });
-            row.push(0); // charges placeholder, same as the server-side CSV
+            row.push(0); // temporary placeholder until the server returns the prediction
             var rows = load();
             rows.push(row);
             save(rows);
@@ -118,6 +118,16 @@
         });
 
         refreshCount();
+
+        // After POST /predict reloads the page, replace the placeholder 0 on the latest row.
+        var latestCharge = {{ predicted_charge | default(None) | tojson }};
+        if (latestCharge !== null) {
+            var rows = load();
+            if (rows.length > 0) {
+                rows[rows.length - 1][6] = latestCharge;
+                save(rows);
+            }
+        }
     })();
     </script>
 </body>

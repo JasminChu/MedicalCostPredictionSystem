@@ -82,6 +82,7 @@ def upload_file():
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     prediction_result = None
+    predicted_charge = None
 
     if request.method == "POST":
         if not (os.path.exists(MODEL_PATH) and os.path.exists(COLUMNS_PATH)):
@@ -96,20 +97,7 @@ def predict():
         smoker = request.form["smoker"]
         region = request.form["region"]
 
-        # Log the submission (charges=0 is a placeholder). Wrapped so a
-        # filesystem problem can never break the prediction itself.
-        try:
-            is_new = (not os.path.exists(SUBMISSIONS_CSV)
-                      or os.path.getsize(SUBMISSIONS_CSV) == 0)
-            with open(SUBMISSIONS_CSV, "a", newline="") as f:
-                writer = csv.writer(f)
-                if is_new:
-                    writer.writerow(["age", "sex", "bmi", "children",
-                                     "smoker", "region", "charges"])
-                writer.writerow([age, sex, bmi, children, smoker, region, 0])
-        except OSError as e:
-            app.logger.warning("Could not save submission: %s", e)
-
+        # 1. Compute prediction first
         input_data = pd.DataFrame(
             [[age, sex, bmi, children, smoker, region]],
             columns=["age", "sex", "bmi", "children", "smoker", "region"],
@@ -118,9 +106,27 @@ def predict():
         input_encoded = input_encoded.reindex(columns=model_columns, fill_value=0)
 
         prediction = model.predict(input_encoded)[0]
-        prediction_result = f"Estimated Insurance Charges: ${prediction:,.2f}"
+        predicted_charge = round(float(prediction), 2)
+        prediction_result = f"Estimated Insurance Charges: ${predicted_charge:,.2f}"
 
-    return render_template("predict.html", prediction_result=prediction_result)
+        # 2. Save the actual predicted_charge (e.g., 19789.14) to user_submissions.csv
+        try:
+            is_new = (not os.path.exists(SUBMISSIONS_CSV)
+                      or os.path.getsize(SUBMISSIONS_CSV) == 0)
+            with open(SUBMISSIONS_CSV, "a", newline="") as f:
+                writer = csv.writer(f)
+                if is_new:
+                    writer.writerow(["age", "sex", "bmi", "children",
+                                     "smoker", "region", "charges"])
+                writer.writerow([age, sex, bmi, children, smoker, region, predicted_charge])
+        except OSError as e:
+            app.logger.warning("Could not save submission: %s", e)
+
+    return render_template(
+        "predict.html",
+        prediction_result=prediction_result,
+        predicted_charge=predicted_charge,
+    )
 
 
 if __name__ == "__main__":
